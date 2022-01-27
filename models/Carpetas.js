@@ -1,4 +1,7 @@
 const { Schema, model } = require('mongoose');
+const Proyect = require('./Proyects');
+const Snippet = require('./Snippets');
+const Carpeta = require('./Carpetas');
 
 const CarpetaSchema = new Schema({
     nombre:String,
