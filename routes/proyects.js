@@ -14,45 +14,24 @@ async function(req, res) {
     const limite = await controllerProyecto.limiteProyecto(req, res);
     if (!limite){
         let result = await controllerProyecto.CrearProyecto(req.body, req.user._id);//guardarProyecto(req.body, req.user._id);
-        //console.log(result);
 
-        if(result && req.body.carpeta){
-            
-                let newResult = await controllerCarpeta.CrearCarpeta(req.body.carpeta, req.user._id, result);
-                if(newResult){
-                    let nResult = await controllerCarpeta.Carpeta_a_CarpetaRaiz(newResult._id, req.user.nickname);
-                    if(nResult){
-                        return res.send({status: true, id: result._id, message:`proyecto guardado en ${newResult.nombre}`});
-                    }else{
-                        return res.send({status: true, id: result._id, message:`proyecto guardado en carpeta nueva carpeta`});
-                    }
-                }else{
-                    return res.send({status: false, message:'Error al crear la carpeta'});
-                }
-
-        } else if(req.body.folder && result){
-
-            let newResult = await controllerCarpeta.Proyecto_a_Carpeta(result, req.body.folder);
-            if(newResult){
-                return res.send({status: true, id: result._id, message:`proyecto guardado en carpeta existente`});
-            }else{
-                return res.send({status: false, message:'Error al guardar en carpeta'});
-            }
-
-        } else if(result){
-
-                let newResult = await controllerCarpeta.Proyecto_a_CarpetaRaiz(result, req.user.nickname);
-                if(newResult){
-                    return res.send({status: true, id: result._id, message:`proyecto guardado en carpeta raiz: ${req.user.nickname}`});
-                }else{
-                    return res.send({status: false, message:'Error al guardar en carpeta raiz'});
-                }
-
-        } else {
+        if(!req.body.idCarpeta || !result){
             return res.send({status: false, message:'proyecto no guardado'});
         }
+        // if(req.body.folder && result){
+
+            let newResult = await controllerCarpeta.Proyecto_a_Carpeta(result, req.body.idCarpeta);
+            if(newResult){
+                return res.send({status: true, proyect: result, message:`Proyect saved`});
+            }else{
+                return res.send({status: false, message:'Error on save proyect'});
+            }
+
+        // } else {
+        //     return res.send({status: false, message:'proyecto no guardado'});
+        // }
     }else{
-        return res.send({status:false, message: 'Has alcanzado el limite de proyectos, actualiza tu plan para crear mas proyectos'});
+        return res.send({status:false, message: 'Proyect limit reached'});
 
     }
 });
@@ -87,19 +66,7 @@ router.get('/proyectos/colaborador', passport.authenticate('jwt'), async functio
     if(req.user){
         const proyects = await Proyect.find({'colaboradores._id':req.user._id}).populate({path:'creador', select:'nickname'});
         if(proyects.length > 0){
-            let arreglo =[];
-            let tempItem;
-            proyects.forEach(async element => {
-                tempItem = await Carpeta.findOne({"proyectos._id":element._id});
-                if(!tempItem){
-                    arreglo.push(tempItem);
-                }
-            });
-            if(arreglo.length > 0){
-                res.send({status:true, proyectos: arreglo});
-            } else {
-                return res.send({status:false, menssage:"Los proyectos en colaboracion se encuantran dentro de las carpetas"})
-            }
+                res.send({status:true, proyectos: proyects});
         }else{
             res.send({
                 status:false,
@@ -119,7 +86,6 @@ router.get('/proyectos/colaborador', passport.authenticate('jwt'), async functio
 
 router.post('/proyectos/compartir', passport.authenticate('jwt'), async function(req, res) {
 
-    //console.log(req.body);
     if(req.user){
         
         const result = await controllerProyecto.CompartirProyecto(req.body.colaborador, req.body.idProyecto);
@@ -158,12 +124,12 @@ router.post('/proyecto', passport.authenticate('jwt'), function(req, res){
 
 router.post('/proyectos/actualizar', passport.authenticate('jwt'), async function(req, res){
     if(req.user){
-        const proyecto = await Proyect.findByIdAndUpdate(req.body.idProyecto, 
+        const proyecto = await Proyect.findByIdAndUpdate(req.body.id, 
             {$set:{html:req.body.html, css:req.body.css, js:req.body.js}}, 
             { new: true });
         
         if(proyecto){
-            return res.send({status:true, proyecto})
+            return res.send({status:true, proyect:proyecto})
         } else {
             return res.send({status:false})
         }

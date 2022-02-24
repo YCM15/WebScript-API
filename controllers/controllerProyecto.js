@@ -11,7 +11,7 @@ exports.CrearProyecto = async function guardarProyecto(proyecto, idUsuario){
         js:proyecto.js
     });    
     const pro = await newProyect.save();
-
+    console.log(pro)
     if(pro){
         return pro._id;
     } else{

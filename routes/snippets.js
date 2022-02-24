@@ -4,6 +4,7 @@ const passport = require('passport');
 const Snippet = require('../models/Snippets');
 const controllerSnippet = require('../controllers/controllerSnippet');
 const controllerCarpeta = require('../controllers/controllerCarpeta');
+const Carpeta = require('../models/Carpetas')
 
 
 router.post('/snippets/guardar', passport.authenticate('jwt'),
@@ -12,29 +13,19 @@ async function(req, res) {
     if (!limite){
         let result = await controllerSnippet.CrearSnippet(req.body, req.user._id);
 
-        if(req.body.folder && result){
+        if(!req.body.idCarpeta || !result){
+            return res.send({status: false, message:'Snippet not saved'});
+        } 
 
-            let newResult = await controllerCarpeta.Snippet_a_Carpeta(result, req.body.folder);
-            if(newResult){
-                return res.send({status: true, id: result._id, message:`Snippet guardado`});
-            }else{
-                return res.send({status: false, message:'Error al guardar en carpeta'});
-            }
-
-        } else if(result){
-
-                let newResult = await controllerCarpeta.Snippet_a_CarpetaRaiz(result, req.user.nickname);
-                if(newResult){
-                    return res.send({status: true, id: result._id, message:`Snippet guardado`});
-                }else{
-                    return res.send({status: false, message:'Error al guardar en carpeta'});
-                }
-
-        } else {
-            return res.send({status: false, message:'Snippet no guardado'});
+        let newResult = await controllerCarpeta.Snippet_a_Carpeta(result, req.body.idCarpeta);
+        if(newResult){
+            return res.send({status: true, snippet: result, message:`Snippet saved`});
+        }else{
+            return res.send({status: false, message:'Error on saved snippet'});
         }
+
     }else{
-        return res.send({status:false, message: 'Has alcanzado el limite de snippets a almacenar en tu plan'});
+        return res.send({status:false, message: 'Limit reached'});
 
     }
 });
@@ -43,7 +34,7 @@ async function(req, res) {
 
 router.post('/snippets/actualizar', passport.authenticate('jwt'), async function(req, res){
     if(req.user){
-        const snippet = await Snippet.findByIdAndUpdate(req.body.idSnippet, 
+        const snippet = await Snippet.findByIdAndUpdate(req.body.id, 
             {$set:{lenguaje:req.body.lenguaje, codigo:req.body.codigo}}, 
             { new: true });
         
@@ -60,7 +51,7 @@ router.post('/snippets/borrar', passport.authenticate('jwt'), async function(req
     if(req.user){
         const snippet = await Snippet.findByIdAndRemove(req.body.idSnippet);
 
-        await Carpeta.findOne({"Snippets._id":req.body.idSnippet}, {$pull:{"Snippets":req.body.idSnippet}}, 
+        await Carpeta.updateMany({"Snippets._id":req.body.idSnippet}, {$pull:{"Snippets":req.body.idSnippet}}, 
         (err, result)=>{
             if(err){
                 return res.send({status:false, message:"error on remove snippets"});
@@ -79,13 +70,12 @@ router.post('/snippets/borrar', passport.authenticate('jwt'), async function(req
 router.post('/snippets', passport.authenticate('jwt'), function(req, res){
     if(req.user){
         Snippet.findOne({'_id':req.body.idSnippet}, function(err, snippet) {
-            if (err) {
+            if (err || !snippet) {
                 return res.send({status:false, mensaje: 'error'});
-            }else if (!snippet) {
-                return res.send({status:false, mensaje:'no encontrado'});
-            }else {
-                return res.send({status:true,snippet});
             }
+            
+            return res.send({status:true,snippet});
+            
         });
     } else{
         return res.send({status:false, mensaje:'unathorized'});
