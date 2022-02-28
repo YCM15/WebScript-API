@@ -13,13 +13,11 @@ router.get('/admin/estadisticas', passport.authenticate('jwt'), async (req, res)
         return res.send({status:false, message:"unauthorized"});
     }
 
-    let usuarios = await User.countDocuments();
-    let Fb = await User.countDocuments({ FB_ID : { $ne: null } });
-    let totalUsuarios = {
-        total: usuarios,
-        nativos: usuarios-Fb,
-        Fb: Fb
+    if(!req.user.admin){
+        return res.send({status:false, message:"unauthorized"});
     }
+
+    let usuarios = await User.countDocuments();
 
     let proyectos = await Proyect.countDocuments();
     let carpetas = await Carpeta.countDocuments();
@@ -31,7 +29,7 @@ router.get('/admin/estadisticas', passport.authenticate('jwt'), async (req, res)
         snippets: snippets
     }
 
-    return res.send({status:true, estadisticas:{totalUsuarios, archivos}});
+    return res.send({status:true, statistics:{totalUsuarios, proyectos, carpetas, snippets}});
 
 });
 
