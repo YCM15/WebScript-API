@@ -26,7 +26,7 @@ router.get('/autenticated', passport.authenticate('jwt'),
 				"nickname": req.user.nickname,
 				"mail": req.user.mail,
 				"plan": req.user.plan,
-				"admin": false
+				"admin": req.user.admin
 			}
 			return res.send({status:true, user:tempUser});	
 		}else{

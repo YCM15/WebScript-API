@@ -53,7 +53,7 @@ exports.postSignup = (req, res, next) => {
 				"nickname": user.nickname,
 				"mail": user.mail,
 				"plan": user.plan,
-				"admin": false
+				"admin": user.admin
 			}
 
 			await controllerCarpeta.CarpetaPadre(user.nickname, user._id);
@@ -92,7 +92,7 @@ exports.postLogin = (req, res, next) => {
 				"nickname": user.nickname,
 				"mail": user.mail,
 				"plan": user.plan,
-				"admin": false
+				"admin": user.admin
 			}
         
         return res.send({status:true, token, user:tempUser});
