@@ -3,6 +3,7 @@ const express = require('express');
 const passport = require('passport');
 const session = require('express-session');
 const cors = require('cors');
+const router = express.Router();
 
 //settings
 const app = express();
@@ -52,6 +53,13 @@ app.use(require('./routes/proyects'));
 app.use(require('./routes/snippets'));
 app.use(require('./routes/carpetas'));
 app.use(require('./routes/admin'));
+router.get("/", passport.authenticate('jwt'),(req, res)=>{
+  if(!req.user){
+    return res.status(401).send("WebScrip API")
+  } 
+
+  return  res.send("WebScript API");
+})
 
 
 app.listen(process.env.PORT || port, () => {
