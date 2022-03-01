@@ -39,7 +39,8 @@ router.get('/admin/statistics-snippets', passport.authenticate('jwt'), async (re
         {
             $group:{
                 "_id":"$lenguaje",
-                "snippets":{ $first : "$nombre"}
+                "snippets":{ $first : "$nombre"},
+                "count": { $sum: 1 }
             }
         }
     ]);
