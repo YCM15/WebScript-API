@@ -17,19 +17,13 @@ router.get('/admin/estadisticas', passport.authenticate('jwt'), async (req, res)
         return res.send({status:false, message:"unauthorized"});
     }
 
-    let usuarios = await User.countDocuments();
+    let users = await User.countDocuments();
 
     let proyectos = await Proyect.countDocuments();
     let carpetas = await Carpeta.countDocuments();
     let snippets = await Snippet.countDocuments();
 
-    let archivos = {
-        proyectos: proyectos,
-        carpetas: carpetas,
-        snippets: snippets
-    }
-
-    return res.send({status:true, statistics:{totalUsuarios, proyectos, carpetas, snippets}});
+    return res.send({status:true, statistics:{users, proyectos, carpetas, snippets}});
 
 });
 
