@@ -15,64 +15,54 @@ router.post('/logIn', userController.postLogin);
 
 router.post('/logIn/Facebook', userController.postLoginFB);
 
+router.post('/change_password', passport.authenticate('jwt'), userController.change_password);
+
 router.get('/autenticated', passport.authenticate('jwt'),
 	function(req, res) {
-		if (req.user){
-			const tempUser = 
-			{
-				"_id": req.user._id,
-				"nombre": req.user.nombre,
-				"apellido": req.user.apellido,
-				"nickname": req.user.nickname,
-				"mail": req.user.mail,
-				"plan": req.user.plan,
-				"admin": req.user.admin
-			}
-			return res.send({status:true, user:tempUser});	
-		}else{
+		if (!req.user){
 			return res.send({status:false});
 		}
+		const tempUser = 
+		{
+			"_id": req.user._id,
+			"nombre": req.user.nombre,
+			"apellido": req.user.apellido,
+			"nickname": req.user.nickname,
+			"mail": req.user.mail,
+			"plan": req.user.plan,
+			"admin": req.user.admin
+		}
+		return res.send({status:true, user:tempUser});	
+		
 	}
-);
-
-router.post('/logOut', configPassport.estaAutenticado, userController.postLogout);
-
-router.get('/userInfo', passport.authenticate('jwt'),
-function(req, res) {
-	if (req.user){
-		res.status(200).send({status:true, user:req.user});	
-	}else{res.send({status:false});}
-}
 );
  
 router.post('/usuario/actualizar', passport.authenticate('jwt'), async (req, res) => {
-	if(req.user){
-		const { nombre, apellido, mail, plan } = req.body;
-		
-		await User.findByIdAndUpdate(req.user._id, 
-			{$set:{nombre, apellido, mail, plan}}, 
-			{ new: true }, (err, user)=>{
-				if(err){
-					if(err.keyPattern.mail){
-						return res.send({status:false, message:`${err.keyValue.mail} ya esta en uso`});
-					}
-					else{
-						return res.send({status:false, message:"error en el servidor"})
-					}
-				} else if(user){
-					return res.send({status:true, user})
-				} else {
-					return res.send({status:false})
-				}
-
-			});
-		
-		
-	} else {
+	if(!req.user){
 		return res.send({status:false});
 	}
+	const { nombre, apellido, mail, plan } = req.body;
 	
+	await User.findByIdAndUpdate(req.user._id, {$set:{nombre, apellido, mail, plan}}, { new: true }, 
+		(err, user)=>{
 
-	
+			if(err){
+				if(err.keyPattern.mail){
+					return res.send({status:false, message:`${err.keyValue.mail} ya esta en uso`});
+				}
+				else{
+					return res.send({status:false, message:"error en el servidor"})
+				}
+			}
+
+			if(!user){
+				return res.send({status:false})
+			}
+			
+			return res.send({status:true, user})
+
+		}
+	);
 });
+
 module.exports = router;

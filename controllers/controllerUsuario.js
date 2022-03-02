@@ -175,3 +175,37 @@ exports.postLoginFB = (req, res) => {
         }
     });
 }
+
+exports.change_password = (req, res)=>{
+	const {password, newPassword} = req.body;
+    if(!password || !newPassword){
+		return res.send({status:false, message:'Password is missing'});
+	}
+
+	User.findById(req.user._id, (err, user) => {
+		if(err){
+			return res.send({status:false, message:'internal server error'});
+		}
+		if(!user){
+			return res.send({status:false, message:'User not found'});
+		}
+
+		user.matchPassword(password, (error, equals)=>{
+			if(!equals){
+				return res.send({status:false, message: 'Password incorrect'});
+			}
+
+			user.password = newPassword;
+			user.save((err)=>{
+				if(err){
+					return res.send({status:false, message:'internal server error'});
+				}
+
+				return res.send({status:true, message:'Password changed successfully'});
+			});
+			
+		});
+			
+		
+	});
+}
